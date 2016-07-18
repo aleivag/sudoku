@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sudoku</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+
+    <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+    <link rel="stylesheet" href="http://www.w3schools.com/lib/w3-theme-teal.css">
+
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+            integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+
+    <script src="https://fb.me/react-15.1.0.js"></script>
+    <script src="https://fb.me/react-dom-15.1.0.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/lodash/4.13.1/lodash.min.js"></script>
+
+    <style>
+        .board {
+            style: "border-style: solid;"
+        }
+
+
+    </style>
+
+    <script type="text/babel">
+
+        var boards = [[
+            0, 9, 0, 1, 7, 0, 8, 4, 0,
+            0, 4, 0, 0, 0, 0, 0, 0, 3,
+            2, 0, 0, 0, 0, 0, 0, 0, 0,
+
+            0, 0, 4, 0, 8, 0, 9, 0, 7,
+            0, 0, 0, 5, 6, 7, 0, 0, 0,
+            6, 0, 7, 0, 1, 0, 5, 0, 0,
+
+            0, 0, 0, 0, 0, 0, 0, 0, 5,
+            4, 0, 0, 0, 0, 0, 0, 2, 0,
+            0, 5, 8, 0, 4, 3, 0, 7, 0,
+        ], [
+            9, 0, 0, 0, 0, 3, 0, 0, 0,
+            0, 8, 0, 2, 0, 0, 5, 0, 0,
+            0, 0, 3, 0, 6, 0, 4, 1, 0,
+
+            0, 4, 0, 5, 3, 0, 8, 0, 0,
+            0, 5, 0, 0, 8, 0, 0, 3, 0,
+            0, 0, 7, 0, 1, 4, 0, 5, 0,
+
+            0, 7, 1, 0, 4, 0, 9, 0, 0,
+            0, 0, 5, 0, 0, 6, 0, 7, 0,
+            0, 0, 0, 1, 0, 0, 0, 0, 5
+
+        ]
+        ];
+
+
+        var initial_board = boards[1];
+
+        var map = _.map;
+        var range = _.range;
+
+
+        var colors = ["#cce6ff", "#ffcc99", "#e6e600", "#1a75ff", "#00e6ac", "#ffaa00", "#eb99ff"];
+
+        $(document).ready(function () {
+
+
+            var BoardCell = React.createClass({
+                getInitialState: function () {
+                    return {'editing': false}
+                },
+
+
+                render: function () {
+
+                    var base_row = Math.floor(this.props.index / 9);
+                    var base_col = (this.props.index - base_row * 9);
+
+                    var inner_row = Math.floor(base_row / 3);
+                    var inner_col = Math.floor(base_col / 3);
+
+                    var colindex = (3 * inner_row + inner_col) % colors.length;
+
+                    if (this.state.editing) {
+                        var content = (
+                                <input className="w3-col m12" style={{ height: 73}} ref="inputVal" autoFocus
+                                       onChange={function(e){this.props.setValue(this.props.index, e.target.value)}.bind(this)}
+                                       value={this.props.value || ""}
+                                ></input>);
+
+                    } else if (!this.props.value) {
+
+
+                        var content = <div style={{ color: _.filter(this.props.options).length >1 ? 'black': 'red'}}>
+                            <div className="w3-row">
+                                <div className="w3-col m4">{this.props.options[9] || ''}&nbsp;</div>
+                                <div className="w3-col m4">{this.props.options[8] || ''}&nbsp;</div>
+                                <div className="w3-col m4">{this.props.options[7] || ''}&nbsp;</div>
+                            </div>
+
+                            <div className="w3-row">
+                                <div className="w3-col m4">{this.props.options[6] || ''}&nbsp;</div>
+                                <div className="w3-col m4">{this.props.options[5] || ''}&nbsp;</div>
+                                <div className="w3-col m4">{this.props.options[4] || ''}&nbsp;</div>
+                            </div>
+
+                            <div className="w3-row">
+                                <div className="w3-col m4">{this.props.options[3] || ''}&nbsp;</div>
+                                <div className="w3-col m4">{this.props.options[2] || ''}&nbsp;</div>
+                                <div className="w3-col m4">{this.props.options[1] || ''}&nbsp;</div>
+                            </div>
+                        </div>;
+                    } else { //height: 70,
+                        var content = <div className="w3-col" style={{  height: 73,width: "100%", fontSize: 25,
+                  textAlign: "center", verticalAlign: "middle" }}>
+                            <b>{this.props.value}</b>
+                        </div>
+                    }
+
+
+                    return <div onDoubleClick={function (){this.setState({'editing': true})}.bind(this)}
+                                className="w3-col m4"
+                                style={{ borderStyle : "solid", height: 73 , backgroundColor: colors[colindex]}}>{content}</div>;
+                }
+            });
+
+            var Board = React.createClass({
+                getInitialState: function () {
+                    return {values: this.props.initial_board};
+                },
+                setValue: function (index, value) {
+
+                    var state_values = this.state.values;
+                    state_values[index] = value;
+                    this.setState({values: state_values})
+                },
+
+
+                render: function () {
+                    var rstate = _.map(this.state.values, function (val, index, values) {
+                        var options = [null, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+                        var floor = Math.floor(index / 9) * 9;
+
+                        var base_row = Math.floor(index / 9);
+                        var base_col = (index - base_row * 9);
+
+                        var inner_row = Math.floor(base_row / 3);
+                        var inner_col = Math.floor(base_col / 3);
+
+                        for (var i = 0; i < 9; i++) {
+                            if (values[floor + i])options[values[floor + i]] = 0;
+                            if (values[base_col + 9 * i])options[values[base_col + 9 * i]] = 0;
+                        }
+
+
+                        for (var i = 0; i < 3; i++) {
+                            for (var j = 0; j < 3; j++) {
+                                var e = inner_row * 9 * 3 + inner_col * 3 + (i * 9 + j);
+                                if (values[e])options[values[e]] = 0;
+                            }
+                        }
+
+                        return <BoardCell setValue={this.setValue} value={val} options={options} key={ index }
+                                          index={ index }></BoardCell>
+
+                    }.bind(this));
+
+
+                    var display = map(range(9), function (row_index) {
+                        return (<div className="w3-row" key={row_index}>
+                            <div className="w3-col m4">{_.slice(rstate, row_index * 9 + 3 * 0, row_index * 9 + 3 * 1)}</div>
+                            <div className="w3-col m4">{_.slice(rstate, row_index * 9 + 3 * 1, row_index * 9 + 3 * 2)}</div>
+                            <div className="w3-col m4">{_.slice(rstate, row_index * 9 + 3 * 2, row_index * 9 + 3 * 3)}</div>
+                        </div>);
+                    });
+
+
+                    return (<div className="board">
+                        {display}
+                    </div>);
+                }
+            });
+
+            ReactDOM.render(
+                    <Board initial_board={initial_board}/>,
+                    document.getElementById('board')
+            );
+
+
+        });
+
+    </script>
+</head>
+<body>
+
+
+<div id="board"></div>
+
+
+</body>
+</html>
