@@ -19,14 +19,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/lodash/4.13.1/lodash.min.js"></script>
 
-    <style>
-        .board {
-            style: "border-style: solid;"
-        }
-
-
-    </style>
-
     <script type="text/babel">
 
         var boards = [[
@@ -62,6 +54,7 @@
 
         var map = _.map;
         var range = _.range;
+        var filter = _.filter;
 
 
         var colors = ["#cce6ff", "#ffcc99", "#e6e600", "#1a75ff", "#00e6ac", "#ffaa00", "#eb99ff"];
@@ -72,6 +65,12 @@
             var BoardCell = React.createClass({
                 getInitialState: function () {
                     return {'editing': false}
+                },
+                
+                onBlur: function(){
+                    if(!this.props.value){
+                        this.setState({editing:false})
+                    }  
                 },
 
 
@@ -88,6 +87,7 @@
                     if (this.state.editing) {
                         var content = (
                                 <input className="w3-col m12" style={{ height: 73}} ref="inputVal" autoFocus
+                                       onBlur={this.onBlur}
                                        onChange={function(e){this.props.setValue(this.props.index, e.target.value)}.bind(this)}
                                        value={this.props.value || ""}
                                 ></input>);
@@ -95,7 +95,7 @@
                     } else if (!this.props.value) {
 
 
-                        var content = <div style={{ color: _.filter(this.props.options).length >1 ? 'black': 'red'}}>
+                        var content = <div style={{ color: filter(this.props.options).length > 1 ? 'black': 'red'}}>
                             <div className="w3-row">
                                 <div className="w3-col m4">{this.props.options[9] || ''}&nbsp;</div>
                                 <div className="w3-col m4">{this.props.options[8] || ''}&nbsp;</div>
